@@ -1,217 +1,653 @@
-<!DOCTYPE html>
-<html lang="en">
+/* SOUNDS */
 
-<head>
+const notificationSound = new Audio(
+"https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3"
+);
 
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+const cashSound = new Audio(
+"https://assets.mixkit.co/active_storage/sfx/270/270-preview.mp3"
+);
 
-<title>Dropshipping Empire</title>
+/* AUDIO FIX */
 
-<link rel="stylesheet" href="style.css">
+let audioUnlocked = false;
 
-</head>
+function unlockAudio(){
 
-<body>
+if(audioUnlocked) return;
 
-<header>
+notificationSound.play()
+.then(()=>{
 
-<h1>📦 Dropshipping Empire</h1>
+notificationSound.pause();
+notificationSound.currentTime = 0;
 
-<p class="subtitle">
-Build your online business empire
+});
+
+cashSound.play()
+.then(()=>{
+
+cashSound.pause();
+cashSound.currentTime = 0;
+
+});
+
+audioUnlocked = true;
+
+}
+
+document.body.addEventListener(
+"click",
+unlockAudio
+);
+
+/* GAME */
+
+let game = {
+
+cash:1500,
+level:1,
+orders:0,
+fans:0,
+conversion:2.1,
+day:1,
+launchedProducts:[]
+
+};
+
+/* PRODUCTS */
+
+const products = [
+
+{
+name:"LED Cat Lamp",
+price:120,
+baseProfit:35,
+trend:90,
+saturation:15,
+image:"https://images.unsplash.com/photo-1519710164239-da123dc03ef4?w=500"
+},
+
+{
+name:"Smart Watch",
+price:400,
+baseProfit:90,
+trend:85,
+saturation:25,
+image:"https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=500"
+},
+
+{
+name:"Gaming Keyboard",
+price:250,
+baseProfit:70,
+trend:70,
+saturation:45,
+image:"https://images.unsplash.com/photo-1511467687858-23d96c32e4ae?w=500"
+},
+
+{
+name:"Sneakers",
+price:300,
+baseProfit:80,
+trend:60,
+saturation:50,
+image:"https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=500"
+}
+
+];
+
+/* UI */
+
+function updateUI(){
+
+document.getElementById("cash").innerText =
+"$" + game.cash;
+
+document.getElementById("level").innerText =
+game.level;
+
+document.getElementById("orders").innerText =
+game.orders;
+
+document.getElementById("fans").innerText =
+game.fans;
+
+document.getElementById("conversion").innerText =
+game.conversion + "%";
+
+document.getElementById("day").innerText =
+game.day;
+
+document.getElementById("progressBar").style.width =
+(game.level * 10) + "%";
+
+}
+
+/* PRODUCT STATUS */
+
+function getTrend(trend){
+
+if(trend >= 80){
+
+return `
+<p class="trend-high">
+🔥 Viral
 </p>
+`;
 
-<button class="menu-btn" onclick="toggleMenu()">
-☰ Menu
+}
+
+if(trend >= 50){
+
+return `
+<p class="trend-medium">
+📈 Trending
+</p>
+`;
+
+}
+
+return `
+<p class="trend-low">
+❌ Dead Product
+</p>
+`;
+
+}
+
+/* RENDER */
+
+function renderProducts(){
+
+const container =
+document.getElementById("products");
+
+container.innerHTML = "";
+
+products.forEach((product,index)=>{
+
+const profit =
+Math.floor(
+product.baseProfit *
+(product.trend / 50)
+);
+
+const card =
+document.createElement("div");
+
+card.className = "product";
+
+card.innerHTML = `
+
+<img src="${product.image}">
+
+<h3>${product.name}</h3>
+
+<p>Price: $${product.price}</p>
+
+${getTrend(product.trend)}
+
+<p>Trend Score: ${product.trend}%</p>
+
+<p>Saturation: ${product.saturation}%</p>
+
+<p>Profit: $${profit}</p>
+
+<button class="launch-btn">
+🚀 Launch Product
 </button>
 
-</header>
+`;
 
-<!-- SIDE MENU -->
+container.appendChild(card);
 
-<div class="menu" id="menu">
+/* BUTTON FIX */
 
-<h2>Settings</h2>
+const btn =
+card.querySelector(".launch-btn");
 
-<button onclick="toggleTheme()">
-🌙 Toggle Theme
-</button>
+btn.addEventListener("click", ()=>{
 
-<button onclick="saveGame()">
-💾 Save Game
-</button>
+launchProduct(
+product.name,
+profit
+);
 
-<button onclick="watchAd()">
-📺 Watch Ads
-</button>
+});
 
-<button onclick="resetGame()">
-🗑 Reset Game
-</button>
+});
 
-<button onclick="toggleMenu()">
-❌ Close
-</button>
+}
 
-</div>
+/* LAUNCH */
 
-<!-- MAIN -->
+function launchProduct(name,profit){
 
-<div class="container">
+if(!game.launchedProducts.includes(name)){
 
-<!-- DASHBOARD -->
+game.launchedProducts.push(name);
 
-<div id="dashboardPage">
+}
 
-<div class="card">
+game.cash += profit;
 
-<h2>Business Stats</h2>
+game.orders += 1;
 
-<div class="stats">
+game.fans +=
+Math.floor(Math.random()*10)+2;
 
-<div class="stat-box">
-<h3>Cash</h3>
-<p id="cash">$0</p>
-</div>
+game.conversion =
+(parseFloat(game.conversion)+0.1).toFixed(1);
 
-<div class="stat-box">
-<h3>Level</h3>
-<p id="level">1</p>
-</div>
+showNotification(
+`🚀 ${name} launched`
+);
 
-<div class="stat-box">
-<h3>Orders</h3>
-<p id="orders">0</p>
-</div>
+playCash();
 
-<div class="stat-box">
-<h3>Fans</h3>
-<p id="fans">0</p>
-</div>
+if(game.orders % 10 === 0){
 
-<div class="stat-box">
-<h3>Conversion</h3>
-<p id="conversion">0%</p>
-</div>
+game.level++;
 
-<div class="stat-box">
-<h3>Day</h3>
-<p id="day">1</p>
-</div>
+showNotification(
+"🎉 LEVEL UP!"
+);
 
-</div>
+}
 
-</div>
+updateUI();
 
-<div class="card">
+saveGame();
 
-<h2>Store Progress</h2>
+checkAchievements();
 
-<div class="progress">
+}
 
-<div class="progress-bar" id="progressBar"></div>
+/* NOTIFICATIONS */
 
-</div>
+function showNotification(text){
 
-</div>
+const box =
+document.createElement("div");
 
-<div class="card">
+box.className = "notification";
 
-<h2>Achievements</h2>
+box.innerText = text;
 
-<div id="achievements"></div>
+document.getElementById("notifications")
+.prepend(box);
 
-</div>
+notificationSound.currentTime = 0;
 
-</div>
+notificationSound.play()
+.catch(()=>{});
 
-<!-- PRODUCTS -->
+setTimeout(()=>{
 
-<div id="productsPage" class="hidden">
+box.remove();
 
-<div class="card">
+},3000);
 
-<h2>Trending Products</h2>
+}
 
-<div id="products"></div>
+/* CASH SOUND */
 
-</div>
+function playCash(){
 
-</div>
+cashSound.currentTime = 0;
 
-<!-- MARKETING -->
+cashSound.play()
+.catch(()=>{});
 
-<div id="marketingPage" class="hidden">
+}
 
-<div class="card">
+/* NEXT DAY */
 
-<h2>Marketing Upgrades</h2>
+function nextDay(){
 
-<button onclick="buyUpgrade('tiktok')">
-🎵 TikTok Ads ($500)
-</button>
+game.day++;
 
-<button onclick="buyUpgrade('instagram')">
-📸 Instagram Influencer ($1200)
-</button>
+products.forEach(product=>{
 
-<button onclick="buyUpgrade('facebook')">
-📘 Facebook Ads ($2000)
-</button>
+product.trend +=
+Math.floor(Math.random()*21)-10;
 
-<button onclick="buyUpgrade('ai')">
-🤖 AI Marketing ($5000)
-</button>
+if(product.trend > 100){
+product.trend = 100;
+}
 
-</div>
+if(product.trend < 5){
+product.trend = 5;
+}
 
-</div>
+});
 
-<!-- SOCIAL -->
+renderProducts();
 
-<div id="socialPage" class="hidden">
+updateUI();
 
-<div class="card">
+showNotification(
+"🌅 Market Updated"
+);
 
-<h2>Live Customers</h2>
+}
 
-<div id="customers"></div>
+/* PAGE */
 
-</div>
+function showPage(page){
 
-</div>
+document.getElementById("dashboardPage")
+.classList.add("hidden");
 
-</div>
+document.getElementById("productsPage")
+.classList.add("hidden");
 
-<!-- NOTIFICATIONS -->
+document.getElementById("marketingPage")
+.classList.add("hidden");
 
-<div id="notifications"></div>
+document.getElementById("socialPage")
+.classList.add("hidden");
 
-<!-- NAVIGATION -->
+document.getElementById(page)
+.classList.remove("hidden");
 
-<div class="bottom-nav">
+}
 
-<button onclick="showPage('dashboardPage')">
-🏠
-</button>
+/* MENU */
 
-<button onclick="showPage('productsPage')">
-📦
-</button>
+function toggleMenu(){
 
-<button onclick="showPage('marketingPage')">
-📢
-</button>
+document.getElementById("menu")
+.classList.toggle("active");
 
-<button onclick="showPage('socialPage')">
-🌍
-</button>
+}
 
-</div>
+/* THEME */
 
-<script src="script.js"></script>
+function toggleTheme(){
 
-</body>
+document.body.classList.toggle("light");
 
-</html>
+}
+
+/* UPGRADES */
+
+function buyUpgrade(type){
+
+let cost = 0;
+
+if(type === "tiktok") cost = 500;
+if(type === "instagram") cost = 1200;
+if(type === "facebook") cost = 2000;
+if(type === "ai") cost = 5000;
+
+if(game.cash < cost){
+
+showNotification(
+"❌ Not Enough Money"
+);
+
+return;
+
+}
+
+game.cash -= cost;
+
+if(type === "tiktok"){
+
+game.fans += 50;
+
+showNotification(
+"🎵 TikTok Campaign Viral!"
+);
+
+}
+
+if(type === "instagram"){
+
+game.conversion =
+(parseFloat(game.conversion)+1).toFixed(1);
+
+showNotification(
+"📸 Influencer Boosted Sales!"
+);
+
+}
+
+if(type === "facebook"){
+
+game.orders += 15;
+
+showNotification(
+"📘 Facebook Ads Worked!"
+);
+
+}
+
+if(type === "ai"){
+
+showNotification(
+"🤖 AI Marketing Enabled!"
+);
+
+setInterval(()=>{
+
+const bonus =
+Math.floor(Math.random()*300)+100;
+
+game.cash += bonus;
+
+game.orders += 1;
+
+showNotification(
+`🤖 AI earned $${bonus}`
+);
+
+updateUI();
+
+saveGame();
+
+},10000);
+
+}
+
+updateUI();
+
+saveGame();
+
+}
+
+/* CUSTOMERS */
+
+function fakeCustomers(){
+
+const names = [
+
+"Emma",
+"Noah",
+"Lucas",
+"Sophia",
+"Daniel",
+"James",
+"Olivia",
+"Himyaan"
+
+];
+
+setInterval(()=>{
+
+if(game.launchedProducts.length === 0){
+return;
+}
+
+const customer =
+names[
+Math.floor(Math.random()*names.length)
+];
+
+const productName =
+game.launchedProducts[
+Math.floor(
+Math.random()*game.launchedProducts.length
+)
+];
+
+const earned =
+Math.floor(Math.random()*150)+20;
+
+const p =
+document.createElement("p");
+
+p.innerText =
+`${customer} bought ${productName} for $${earned}`;
+
+document.getElementById("customers")
+.prepend(p);
+
+showNotification(
+`🛒 ${customer} bought ${productName}`
+);
+
+game.cash += earned;
+
+game.orders += 1;
+
+updateUI();
+
+if(
+document.getElementById("customers")
+.children.length > 8
+){
+
+document.getElementById("customers")
+.lastChild.remove();
+
+}
+
+saveGame();
+
+},7000);
+
+}
+
+/* ACHIEVEMENTS */
+
+function checkAchievements(){
+
+const achievements =
+document.getElementById("achievements");
+
+if(game.orders >= 10 &&
+!document.getElementById("a1")){
+
+achievements.innerHTML +=
+`<p id="a1">🏆 First 10 Orders</p>`;
+
+}
+
+if(game.cash >= 5000 &&
+!document.getElementById("a2")){
+
+achievements.innerHTML +=
+`<p id="a2">💰 Rich Seller</p>`;
+
+}
+
+if(game.level >= 5 &&
+!document.getElementById("a3")){
+
+achievements.innerHTML +=
+`<p id="a3">🚀 Business Master</p>`;
+
+}
+
+}
+
+/* ADS */
+
+function watchAd(){
+
+showNotification(
+"📺 Running Ads..."
+);
+
+setTimeout(()=>{
+
+game.cash += 500;
+
+showNotification(
+"💵 +$500 Earned"
+);
+
+playCash();
+
+updateUI();
+
+saveGame();
+
+},3000);
+
+}
+
+/* SAVE */
+
+function saveGame(){
+
+localStorage.setItem(
+"dropEmpireSave",
+JSON.stringify(game)
+);
+
+}
+
+/* LOAD */
+
+function loadGame(){
+
+const save =
+localStorage.getItem("dropEmpireSave");
+
+if(save){
+
+game = JSON.parse(save);
+
+}
+
+}
+
+/* RESET */
+
+function resetGame(){
+
+localStorage.removeItem(
+"dropEmpireSave"
+);
+
+location.reload();
+
+}
+
+/* START */
+
+loadGame();
+
+updateUI();
+
+renderProducts();
+
+fakeCustomers();
+
+checkAchievements();
+
+showNotification(
+"✅ Game Loaded Successfully"
+);
+
+/* MARKET CHANGES */
+
+setInterval(()=>{
+
+nextDay();
+
+},15000);
